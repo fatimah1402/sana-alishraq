@@ -423,8 +423,52 @@ document.addEventListener('click',function(e){
  else if(action.includes('sanaGame(')||action.includes('sanaPlay('))room='sana-play-room';
  if(room)requestAnimationFrame(()=>requestAnimationFrame(()=>{const node=document.getElementById(room);if(node&&!node.classList.contains('hide'))node.scrollIntoView({behavior:'smooth',block:'start'});}));
 });
-</script><div id="sana-install-wrap" style="display:none;position:fixed;bottom:20px;left:20px;z-index:99999;max-width:290px;direction:rtl"><button id="sana-install-button" type="button" style="background:#44125e;color:#ffdf92;border:2px solid #eac477;box-shadow:0 8px 26px #1a092a70;border-radius:14px;padding:13px 18px;font-size:17px;font-weight:800">✦ تثبيت سَنَا الإِشْرَاق</button></div>
-<script id="sana-install-pwa">(()=>{let deferred=null;const box=document.getElementById('sana-install-wrap'),btn=document.getElementById('sana-install-button');window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferred=e;box.style.display='block'});btn.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;box.style.display='none'});window.addEventListener('appinstalled',()=>{box.style.display='none';deferred=null});})();</script><script id="sana-interactive-journeys">
+</script><style id="sana-install-style">
+#sana-install-wrap{position:fixed;bottom:18px;left:18px;z-index:99998;direction:rtl}
+#sana-install-button{background:linear-gradient(130deg,#31034f,#651189);color:#ffdd85;border:2px solid #ebc36e;box-shadow:0 8px 26px #1a092a77;border-radius:16px;padding:13px 19px;font-size:17px;font-weight:800;cursor:pointer}
+#sana-install-dialog[hidden],#sana-install-wrap[hidden]{display:none!important}
+#sana-install-dialog{position:fixed;inset:0;background:#130620aa;z-index:999999;display:grid;place-items:center;padding:16px;direction:rtl}
+#sana-install-card{max-width:460px;width:100%;background:#fffafc;color:#38134f;border:2px solid #ddb465;border-radius:23px;box-shadow:0 25px 60px #1a092a80;padding:23px;line-height:1.9;text-align:right}
+#sana-install-card h2{color:#4b126c;margin:0 0 8px;font-size:25px}
+#sana-install-card p{margin:8px 0 12px}
+#sana-install-card button{padding:10px 16px;margin:5px 0;border-radius:12px;font-weight:700;cursor:pointer}
+#sana-install-native{background:#521273;color:#fff2c3;border:0}
+#sana-install-close{background:#eee5f2;color:#44135c;border:1px solid #cab4d3}
+@media(max-width:600px){#sana-install-button{font-size:14px;padding:11px 14px}#sana-install-wrap{bottom:12px;left:9px}}
+</style>
+<div id="sana-install-wrap"><button id="sana-install-button" type="button">✦ تثبيت سَنَا الإِشْرَاق</button></div>
+<div id="sana-install-dialog" role="dialog" aria-modal="true" aria-label="تثبيت سَنَا الإِشْرَاق" hidden>
+<div id="sana-install-card">
+<h2>👑 ثبِّت سَنَا الإِشْرَاق</h2>
+<p id="sana-install-help"></p>
+<button id="sana-install-native" type="button" hidden>تثبيت التطبيق الآن</button>
+<button id="sana-install-close" type="button">إغلاق</button>
+<p style="font-size:13px;color:#775785">التثبيت اختياري ويحتاج موافقتك. لا يُطلب تنزيل APK أو تجاوز تحذيرات الحماية.</p>
+</div></div>
+<script id="sana-install-pwa">(()=>{
+let deferred=null;
+const wrap=document.getElementById('sana-install-wrap'),open=document.getElementById('sana-install-button'),dialog=document.getElementById('sana-install-dialog'),help=document.getElementById('sana-install-help'),native=document.getElementById('sana-install-native'),close=document.getElementById('sana-install-close');
+const isInstalled=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const ua=navigator.userAgent||'';
+const samsung=/SamsungBrowser/i.test(ua), ios=/iPhone|iPad|iPod/i.test(ua),android=/Android/i.test(ua),edge=/Edg\//i.test(ua);
+function render(){
+ if(isInstalled()){wrap.hidden=true;dialog.hidden=true;return;}
+ wrap.hidden=false; native.hidden=true;
+ if(samsung){help.textContent='أنتِ تستخدمين متصفح سامسونج. لتقليل احتمال تحذير الحماية الذي ظهر سابقًا، افتحي رابط سَنَا في Google Chrome ثم اختاري من قائمة Chrome (⋮) «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إذا ظهر التحذير مجددًا، لا تتابعي التثبيت؛ اكتفي باستخدام الموقع في المتصفح.';}
+ else if(ios){help.textContent='على الآيفون: افتحي الموقع في Safari، ثم زر المشاركة ← «إضافة إلى الشاشة الرئيسية» ← «إضافة». افتحي الموقع في Safari إذا كنت تستخدمين متصفحًا آخر.';}
+ else if(deferred){help.textContent='يمكن تثبيت تطبيق الويب مباشرة من هذا المتصفح، وستظهر نافذة التأكيد الخاصة بالمتصفح.';native.hidden=false;}
+ else if(android){help.textContent='على أندرويد: من قائمة المتصفح (⋮) اختاري «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق» إن كان متاحًا. لا تثبتي أي ملف APK قديم ولا تتجاوزي تحذيرات الحماية.';}
+ else{help.textContent='على ويندوز: افتحي الموقع في Microsoft Edge، ثم قائمة (•••) ← «التطبيقات» ← «تثبيت هذا الموقع كتطبيق». إذا ظهر زر التثبيت داخل شريط العنوان، يمكنك استخدامه.';}
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;render();});
+window.addEventListener('appinstalled',()=>{deferred=null;render();});
+open.addEventListener('click',()=>{render();dialog.hidden=false;});
+close.addEventListener('click',()=>{dialog.hidden=true;});
+dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.hidden=true;});
+native.addEventListener('click',async()=>{if(!deferred)return;const current=deferred;deferred=null;native.hidden=true;try{await current.prompt();await current.userChoice}catch(e){}render();});
+render();
+})();</script>
+<script id="sana-interactive-journeys">
 /* Each path: choose, order, pair. Stored scores are session-only and no student information leaves the device. */
 const SANA_JOURNEYS={
 lingual:{name:'الرحلة اللغوية',emoji:'🗣️',missions:[
